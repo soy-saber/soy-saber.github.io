@@ -1,0 +1,6 @@
+- name: Install Dependencies
+  run: |
+    npm install
+    npm install hexo-generator-feed --save #添加此内容
+    npm install hexo-renderer-pug hexo-renderer-stylus --save
+    npm install -g hexo-cli 

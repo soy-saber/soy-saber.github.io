@@ -129,3 +129,18 @@ live2d:
     height: 300 # 高度
   mobile:
     show: true # 移动端显示
+
+# RSS
+feed:
+  enable: true
+  type: atom
+  path: atom.xml #RSS文件路径
+  limit: 20
+  hub:
+  content:
+  content_limit: 140
+  content_limit_delim: ' '
+  order_by: -date
+  icon: /img/avatar.png
+  autodiscovery: true
+  template:

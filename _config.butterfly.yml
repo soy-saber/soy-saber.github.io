@@ -9,15 +9,15 @@ nav:
 
 # Menu 目录
 menu:
-  # Home: / || fas fa-home
-  # Archives: /archives/ || fas fa-archive
-  # Tags: /tags/ || fas fa-tags
-  # Categories: /categories/ || fas fa-folder-open
-  # List||fas fa-list:
-  #   Music: /music/ || fas fa-music
-  #   Movie: /movies/ || fas fa-video
-  # Link: /link/ || fas fa-link
-  # About: /about/ || fas fa-heart
+  首页: / || fas fa-home
+  归档: /archives/ || fas fa-archive
+  标签: /tags/ || fas fa-tags
+  目录: /categories/ || fas fa-folder-open
+  列表||fas fa-list:
+  #   音乐: /music/ || fas fa-music
+  #   电影: /movies/ || fas fa-video
+  友情链接: /link/ || fas fa-link
+  关于我们: /about/ || fas fa-heart
 
 # Code Blocks (代码块相关)
 # --------------------------------------
@@ -94,6 +94,8 @@ cover:
   # 当没有设置封面时，显示默认封面
   default_cover:
     - https://picui.ogmua.cn/s1/2026/05/28/6a17380013da1.webp
+    - https://picui.ogmua.cn/s1/2026/05/30/6a1a50eecd3e4.webp
+    - https://picui.ogmua.cn/s1/2026/05/30/6a1a50f0643f4.webp
 
 # 替换无法显示的图片
 error_img:
@@ -757,7 +759,7 @@ hr_icon:
 
 # 首页副标题
 subtitle:
-  enable: false
+  enable: true
   # 打字效果
   effect: true
   # 定制 typed.js
@@ -772,6 +774,7 @@ subtitle:
   source: false
   # 如果关闭打字效果，subtitle 只会显示 sub 的第一行文字
   sub:
+  - "尽己所能"
 
 # 加载动画
 preloader:

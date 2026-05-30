@@ -1,0 +1,12 @@
+#按着以下格式进行添加
+- class_name: [分类名称]
+  class_desc: [分类描述]
+  link_list:
+    - name: [网站名称 1]
+      link: [网站地址 1]
+      avatar: [网站头像 1]
+      descr: [网站描述 1]
+    - name: [网站名称 2]
+      link: [网站地址 2]
+      avatar: [网站头像 2]
+      descr: [网站描述 2]
