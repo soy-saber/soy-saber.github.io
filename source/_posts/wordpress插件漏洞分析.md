@@ -1,22 +1,14 @@
----
-title: All-in-One WP Migration v7.105 — 反序列化漏洞分析
-tags: [漏洞分析、wordpress、php]
-categories: 漏洞分析
----
-
-## All-in-One WP Migration v7.105 — 反序列化漏洞分析
-
----
+# All-in-One WP Migration v7.105 — 反序列化漏洞分析
 
 ## 插件简介
 
 All-in-One WP Migration 是 WordPress 生态系统中最受欢迎的迁移插件之一，由 ServMask 公司开发。自2013年发布以来，它已经帮助全球数百万用户轻松迁移他们的 WordPress 网站。
 
-![image-20260604174350742](D:/github%20repo/soy-saber.github.io/source/_posts/wordpress%E6%8F%92%E4%BB%B6%E6%BC%8F%E6%B4%9E%E5%88%86%E6%9E%90.assets/image-20260604174350742.png)
+![image-20260604174350742](image-20260604174350742.png)
 
 ## 漏洞分析
 
-漏洞点在
+漏洞点在导入流程中 `class-ai1wm-import-options.php`对数据库查询结果调用 `maybe_unserialize()` 时未限制 `allowed_classes`，导致攻击者可通过备份文件中的序列化 payload 触发 `WP_HTML_Token` gadget 链实现 RCE。
 
 ### 1. 导入管道注册
 
@@ -35,8 +27,6 @@ add_filter( 'ai1wm_import', 'Ai1wm_Import_Clean::execute', 400 );
 ```
 
 数字是 priority，按从小到大依次执行。**漏洞触发在 priority=330 的 `Import_Options`**。
-
----
 
 ## 2. 控制器分发逻辑
 
@@ -59,7 +49,7 @@ public static function import( $params = array() ) {
 }
 ```
 
----
+
 
 ## 3. Step 5 (priority=5)：上传恶意备份
 
@@ -287,7 +277,7 @@ public static function execute( $params ) {
     $tables = $db_client->get_tables();
     $mainsite_prefix = ai1wm_table_prefix( 'mainsite' );  // Line 47: 返回 base_prefix + 'mainsite_'
 
-    // Line 50: 检查表是否存在（Step 300 创建的）
+    // Line 50: 检查表是否存在（Step 300 创建）
     if ( in_array( "{$mainsite_prefix}sitemeta", $tables ) ) {
 
         // Line 53: 查询攻击者控制的 meta_value
@@ -298,7 +288,6 @@ public static function execute( $params ) {
         if ( ( $row = $db_client->fetch_assoc( $result ) ) ) {
             $fs_accounts = get_option( 'fs_accounts', array() );
 
-            // Line 56: ★★★ 漏洞点 ★★★
             // 无 allowed_classes 限制的反序列化
             $meta_value = maybe_unserialize( $row['meta_value'] );
 
@@ -311,7 +300,7 @@ public static function execute( $params ) {
 
 这里有个很奇怪的地方，可以从上面的函数看到`$blog_id`被硬编码为了`mainsite`，过这个函数的时候恒不等于`null/0/1`，因此最后的表名前缀一定为`base_prefix(默认是wp)_+mainsite+_`
 
-```
+```php
 function ai1wm_table_prefix( $blog_id = null ) {
     if ( ai1wm_is_mainsite( $blog_id ) ) {  // 'mainsite' !== null/0/1 → false
         return $wpdb->base_prefix;
@@ -319,10 +308,6 @@ function ai1wm_table_prefix( $blog_id = null ) {
     return $wpdb->base_prefix . $blog_id . '_';  // → 'wp_mainsite_
 }
 ```
-
-
-
-这里有个很有意思的地方，blog_id 传入字符串 `'mainsite'` 导致表名错配
 
 ---
 
@@ -343,8 +328,6 @@ function ai1wm_table_prefix( $blog_id = null ) {
                                                          RCE
 ```
 
-
-
 ---
 
 ## 11. 可用 Gadget 链
@@ -352,10 +335,9 @@ function ai1wm_table_prefix( $blog_id = null ) {
 | Gadget | WordPress 版本 | 方法 |
 |--------|--------------|------|
 | `WP_HTML_Token::__destruct` | 6.4.0 ~ 6.4.1 | `call_user_func($this->on_destroy, $this->bookmark_name)` |
-| `WP_HTML_Token::__destruct` | 6.4.2+ | **不可用** — `__wakeup()` 抛异常阻止反序列化 |
-| 其他插件/主题 | 任意版本 | 任何有 `__destruct` + 危险调用的类 |
 
 **`WP_HTML_Token`** (wp-includes/html-api/class-wp-html-token.php:92-94)：
+
 ```php
 public function __destruct() {
     if ( is_callable( $this->on_destroy ) ) {
@@ -363,8 +345,7 @@ public function __destruct() {
     }
 }
 ```
-
----
+附一张调试结果的截图：
 
 ## 12. .wpress 文件格式
 
@@ -381,17 +362,4 @@ Offset  Size    Field
 ... repeat for each file ...
 
 [EOF Block: 4377 bytes of null + archive_size + archive_crc]
-```
-
----
-
-## 13. 修复建议
-
-```php
-// class-ai1wm-import-options.php:56
-// Before (vulnerable):
-$meta_value = maybe_unserialize( $row['meta_value'] );
-
-// After (safe):
-$meta_value = @unserialize( $row['meta_value'], [ 'allowed_classes' => false ] );
 ```
