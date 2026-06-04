@@ -14,7 +14,7 @@ categories: 漏洞分析
 
 All-in-One WP Migration 是 WordPress 生态系统中最受欢迎的迁移插件之一，由 ServMask 公司开发。自2013年发布以来，它已经帮助全球数百万用户轻松迁移他们的 WordPress 网站。
 
-![image-20260604174350742](image-20260604174350742.png)
+{% asset_img image-20260604174350742.png All-in-One WP Migration 插件界面 %}
 
 ## 漏洞分析
 
