@@ -1,3 +1,13 @@
+﻿---
+title: All-in-One WP Migration v7.105 — 反序列化漏洞分析
+tags: 
+  - 漏洞分析
+  - 反序列化
+  - php
+  - wordpress
+categories: 漏洞分析
+---
+
 # All-in-One WP Migration v7.105 — 反序列化漏洞分析
 
 ## 插件简介
@@ -49,8 +59,6 @@ public static function import( $params = array() ) {
 }
 ```
 
-
-
 ## 3. Step 5 (priority=5)：上传恶意备份
 
 **文件**: `lib/model/import/class-ai1wm-import-upload.php:34-201`
@@ -89,13 +97,12 @@ function ai1wm_is_filedata_supported( $file ) {
 ```
 
 **文件格式**（.wpress 二进制结构）：
+
 ```
 [Entry 1 Header (4377B)] [package.json 内容 (363B)]
 [Entry 2 Header (4377B)] [database.sql 内容 (481B)]
 [EOF Block (4377B)]
 ```
-
----
 
 ## 4. Step 10 (priority=10)：兼容性检查
 
@@ -113,8 +120,6 @@ public static function execute( $params ) {
 ```
 
 **作用**：检查 PHP 版本、扩展等，无文件操作，不影响后续流程。
-
----
 
 ## 5. Step 50 (priority=50)：校验归档 + 解压 package.json
 
@@ -157,8 +162,6 @@ public static function execute( $params ) {
 
 **作用**：验证归档完整性（EOF 块），解压配置文件供后续步骤使用。通过后 `storage/` 目录下会有 `package.json`。
 
----
-
 ## 6. Step 150 (priority=150)：创建 blogs.json
 
 **文件**: `lib/model/import/class-ai1wm-import-blogs.php:34-155`
@@ -181,8 +184,6 @@ public static function execute( $params ) {
 ```
 
 **作用**：为 Step 300（SQL 导入）创建必要的 `blogs.json` 配置文件。单站点时为空数组 `[]`。
-
----
 
 ## 7. Step 295 (priority=295)：解压 database.sql
 
@@ -209,8 +210,6 @@ public static function execute( $params ) {
 ```
 
 **作用**：从归档中提取 `database.sql` 到 `storage/{storage}/database.sql`。
-
----
 
 ## 8. Step 300 (priority=300)：执行恶意 SQL
 
@@ -239,7 +238,7 @@ public static function execute( $params ) {
     $db_client->import( ai1wm_database_path( $params ), $query_offset );
 ```
 
-**`$db_client->import()` 的实际执行**（class-ai1wm-database.php:1083-1156）：
+`$db_client->import()` 的实际执行（class-ai1wm-database.php:1083-1156）：
 
 ```php
 while ( ( $line = fgets( $file_handler ) ) !== false ) {
@@ -264,8 +263,6 @@ INSERT INTO wp_mainsite_sitemeta (meta_key, meta_value) VALUES
 ```
 
 **关键**：SQL 没有任何过滤，攻击者的 `CREATE TABLE` + `INSERT` 被完整执行。恶意序列化对象被写入 `meta_value` 列。
-
----
 
 ## 9. Step 330 (priority=330)：漏洞触发点
 
@@ -309,9 +306,7 @@ function ai1wm_table_prefix( $blog_id = null ) {
 }
 ```
 
----
-
-## 10. 漏洞原理总结
+## 10. 漏洞流程总结
 
 ```
 可控数据流：
@@ -327,8 +322,6 @@ function ai1wm_table_prefix( $blog_id = null ) {
                                                               ↓
                                                          RCE
 ```
-
----
 
 ## 11. 可用 Gadget 链
 
@@ -347,7 +340,7 @@ public function __destruct() {
 ```
 附一张调试结果的截图：
 
-## 12. .wpress 文件格式
+## 12.wpress 文件格式
 
 ```
 Offset  Size    Field
