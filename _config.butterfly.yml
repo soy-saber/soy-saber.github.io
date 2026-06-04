@@ -13,9 +13,9 @@ menu:
   归档: /archives/ || fas fa-archive
   标签: /tags/ || fas fa-tags
   目录: /categories/ || fas fa-folder-open
-  列表||fas fa-list:
-  #   音乐: /music/ || fas fa-music
-  #   电影: /movies/ || fas fa-video
+#  列表||fas fa-list:
+#    音乐: /music/ || fas fa-music
+#    电影: /movies/ || fas fa-video
   友情链接: /link/ || fas fa-link
   关于我们: /about/ || fas fa-heart
 

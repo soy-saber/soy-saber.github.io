@@ -1,4 +1,10 @@
-# All-in-One WP Migration v7.105 — 反序列化漏洞分析
+---
+title: All-in-One WP Migration v7.105 — 反序列化漏洞分析
+tags: [漏洞分析、wordpress、php]
+categories: 漏洞分析
+---
+
+## All-in-One WP Migration v7.105 — 反序列化漏洞分析
 
 ---
 
