@@ -38,7 +38,7 @@ add_filter( 'ai1wm_import', 'Ai1wm_Import_Clean::execute', 400 );
 
 数字是 priority，按从小到大依次执行。**漏洞触发在 priority=330 的 `Import_Options`**。
 
-## 2. 控制器分发逻辑
+### 2. 控制器分发逻辑
 
 **文件**: `lib/controller/class-ai1wm-import-controller.php:38-159`
 
@@ -59,7 +59,7 @@ public static function import( $params = array() ) {
 }
 ```
 
-## 3. Step 5 (priority=5)：上传恶意备份
+### 3. Step 5 (priority=5)：上传恶意备份
 
 **文件**: `lib/model/import/class-ai1wm-import-upload.php:34-201`
 
@@ -104,7 +104,7 @@ function ai1wm_is_filedata_supported( $file ) {
 [EOF Block (4377B)]
 ```
 
-## 4. Step 10 (priority=10)：兼容性检查
+### 4. Step 10 (priority=10)：兼容性检查
 
 **文件**: `lib/model/import/class-ai1wm-import-compatibility.php:34-50`
 
@@ -121,7 +121,7 @@ public static function execute( $params ) {
 
 **作用**：检查 PHP 版本、扩展等，无文件操作，不影响后续流程。
 
-## 5. Step 50 (priority=50)：校验归档 + 解压 package.json
+### 5. Step 50 (priority=50)：校验归档 + 解压 package.json
 
 **文件**: `lib/model/import/class-ai1wm-import-validate.php:34-107`
 
@@ -162,7 +162,7 @@ public static function execute( $params ) {
 
 **作用**：验证归档完整性（EOF 块），解压配置文件供后续步骤使用。通过后 `storage/` 目录下会有 `package.json`。
 
-## 6. Step 150 (priority=150)：创建 blogs.json
+### 6. Step 150 (priority=150)：创建 blogs.json
 
 **文件**: `lib/model/import/class-ai1wm-import-blogs.php:34-155`
 
@@ -185,7 +185,7 @@ public static function execute( $params ) {
 
 **作用**：为 Step 300（SQL 导入）创建必要的 `blogs.json` 配置文件。单站点时为空数组 `[]`。
 
-## 7. Step 295 (priority=295)：解压 database.sql
+### 7. Step 295 (priority=295)：解压 database.sql
 
 **文件**: `lib/model/import/class-ai1wm-import-database-file.php:34-164`
 
@@ -211,7 +211,7 @@ public static function execute( $params ) {
 
 **作用**：从归档中提取 `database.sql` 到 `storage/{storage}/database.sql`。
 
-## 8. Step 300 (priority=300)：执行恶意 SQL
+### 8. Step 300 (priority=300)：执行恶意 SQL
 
 **文件**: `lib/model/import/class-ai1wm-import-database.php:34-1093`
 
@@ -264,7 +264,7 @@ INSERT INTO wp_mainsite_sitemeta (meta_key, meta_value) VALUES
 
 **关键**：SQL 没有任何过滤，攻击者的 `CREATE TABLE` + `INSERT` 被完整执行。恶意序列化对象被写入 `meta_value` 列。
 
-## 9. Step 330 (priority=330)：漏洞触发点
+### 9. Step 330 (priority=330)：漏洞触发点
 
 **文件**: `lib/model/import/class-ai1wm-import-options.php:34-78`
 
@@ -306,7 +306,7 @@ function ai1wm_table_prefix( $blog_id = null ) {
 }
 ```
 
-## 10. 漏洞流程总结
+### 10. 漏洞流程总结
 
 ```
 可控数据流：
@@ -323,7 +323,7 @@ function ai1wm_table_prefix( $blog_id = null ) {
                                                          RCE
 ```
 
-## 11. 可用 Gadget 链
+### 11. 可用 Gadget 链
 
 | Gadget | WordPress 版本 | 方法 |
 |--------|--------------|------|
@@ -340,7 +340,7 @@ public function __destruct() {
 ```
 附一张调试结果的截图：
 
-## 12.wpress 文件格式
+### 12.wpress 文件格式
 
 ```
 Offset  Size    Field
