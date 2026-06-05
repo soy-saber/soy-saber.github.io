@@ -98,6 +98,10 @@ ignore:
 ## Themes: https://hexo.io/themes/
 theme: butterfly
 
+# Marked 配置
+marked:
+  postAsset: true
+
 # Deployment
 ## Docs: https://hexo.io/docs/one-command-deployment
 deploy:
