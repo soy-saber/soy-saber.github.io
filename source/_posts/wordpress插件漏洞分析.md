@@ -339,7 +339,11 @@ public function __destruct() {
     }
 }
 ```
-附一张调试结果的截图：
+附两张调试结果的截图：
+
+{% asset_img image-20260605152425875.png 调试结果截图1 %}
+
+{% asset_img image-20260605152456969.png 调试结果截图2 %}
 
 ### wpress 文件格式
 
