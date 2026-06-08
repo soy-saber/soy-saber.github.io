@@ -78,3 +78,8 @@ highlight_copy: true
 highlight_lang: true
 highlight_shrink: false
 highlight_fullpage: true
+
+inject:
+  head:
+    - <link rel="stylesheet" href="/css/custom.css">
+  bottom:
